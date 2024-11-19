@@ -56,8 +56,9 @@ Contributions are welcome!
 - Multiple configuration files
   	- Use a different configuration file when running the script instead of the default config
 - 3rd Party notification support
-	- [Healthchecks.io](https://healthchecks.io), Telegram and Discord can be used to track script execution time, status and promptly alert about errors.
-   	- You can also get notified with the `Snapraid SMART log` and `Snapraid Status`
+	- Can be used to track script execution time, status and promptly alert about errors.
+	- Supports [Healthchecks.io](https://healthchecks.io), and 100+ services via Apprise (Telegram, Discord, Slack, etc) 
+    - You can also get notified with the `Snapraid SMART log` and `Snapraid Status`
 	- Notification Hook: if your favourite notification service is not supported by this script, you can use a custom notification command or another mail binary
 - Important messages are also sent to the system log.
 - Emails are still the best place to get detailed but readable information.
@@ -93,11 +94,15 @@ If you don't know what to do, I recommend using the default values and see how i
 - SnapRAID Output (log) retention - disabled by default (log is overriden every run)
 	- Detailed output retention for each run
 	- You can choose the amount of days and the path, by default set to the user home 
-- Healthchecks.io, Telegram and Discord integration
-	- If you don't read your emails every day, this is a great one for you, since you can be quickly informed if things go wrong. 
-  	- The script will report to Healthchecks.io, Telegram and Discord when is started and when is completed. If there's a failure it's included as well.
-  	- **Healthchecks.io only:** If the script ends with a **_WARNING_** message, it will report **_DOWN_** to Healthchecks.io, if the message is **_COMPLETED_** it will report **_UP_**. 
-  	- **Healthchecks.io only:** This service will also show how much time the script takes to complete.
+- Healthchecks.io integration
+   - The script will report to Healthchecks.io when is started and when is completed. If there's a failure it's included as well.
+   -  This service will also show how much time the script takes to complete.
+  	- If the script ends with a **_WARNING_** message, it will report **_DOWN_** to Healthchecks.io, if the message is **_COMPLETED_** it will report **_UP_**. 
+- Notifications services via [Apprise](https://github.com/caronc/apprise)
+	- Send notifications to Telegram, Discord, Slack... you name it! Apprise supports 100+ services! Configuration is simple, instructions [are here](https://github.com/caronc/apprise/wiki).
+	- 	If you don't read your emails every day, this is a great one for you, since you can be quickly informed if things go wrong. 
+  	- The script will report when is started and when is completed. If there's a failure it's included as well.
+  	- You can choose to get the output attached if there's a warning (only supported by some services, check Apprise docs)
 - Notification Hook
 	- Made for external services or mail binaries with different commands than `mailx`.
 	- Configure the path of the script or the mail binary to be invoked.
@@ -111,8 +116,8 @@ If you don't know what to do, I recommend using the default values and see how i
    	- Docker mode - choose to pause/unpause or to stop/restart your containers
    	- Docker remote - if docker is running on a remote machine
 - Multiple Configuration files
-  	- By default the script will use the predefined config file `script-config.sh` that must be placed in the same folder
-  	- You can specify another file when running the script like `snapraid-aio-script.sh /home/alternate_config.sh`
+  	- By default the script will use the predefined config file `script-config.conf` that must be placed in the same folder
+  	- You can specify another file when running the script like `snapraid-aio-script.sh /home/alternate_config.conf`
 - Custom Hooks
 	- Commands or scripts to be run before and after SnapRAID operations.
 	- Option to display friendly name to in the email output
@@ -279,10 +284,11 @@ Email address is set. Sending email report to yourmail@example.com [Tue 20 Apr 1
 # Requirements
 
 If you are running a Debian based distro (with `apt` package manager) the script will automatically install these dependencies for you.
-- [`python3-markdown`](https://packages.debian.org/bullseye/python3-markdown) to format emails - will be installed if not found
-- `curl` to use Healhchecks - will be installed if not found
+- [`python3-markdown`](https://packages.debian.org/bullseye/python3-markdown) to format emails
+- `curl` to use Healhchecks
 - [`jq`](https://packages.debian.org/bullseye/jq) - used to send discord notifications, is a lightweight and flexible command-line JSON processor
 - [`bc`](https://packages.debian.org/bullseye/bc) - used for for floating-point comparisons
+- [`Apprise`](https://github.com/caronc/apprise) - used to send notifications to 100+ services
 
 
 Dependencies that require manual installation:
@@ -338,11 +344,11 @@ echo "deb http://adelolmo.github.io/$(lsb_release -cs) $(lsb_release -cs) main" 
 ```
 
 3. Run `apt update`, and `apt install hd-idle` to install the updated version. You do not need to specify the respository, apt will automatically install the newset version from the new repository.
-4. In your `script-config.sh` file, change `SPINDOWN=0` to `SPINDOWN=1` to enable spindown.
+4. In your `script-config.conf` file, change `SPINDOWN=0` to `SPINDOWN=1` to enable spindown.
 5. If you wish to use `hd-idle` as a service to manage your disks outside of the scope of the Snapraid AIO Script, refer to these [additional instructions](https://forum.openmediavault.org/index.php?thread/37438-how-to-spin-down-hard-drives-with-hd-idle/) on the OpenMediaVault forum.
 
 # Upgrade 
-If you are using a previous version of the script, do not use your config file. Please move your preferences to the new `script-config.sh` found in the archive. 
+If you are using a previous version of the script, do not use your config file. Please move your preferences to the new `script-config.conf` found in the archive. 
 
 # Known Issues
 - You tell me!
@@ -365,3 +371,4 @@ This script would not exist without:
 - [Caedis](https://github.com/Caedis)
 - [Pushpender](https://github.com/ranapushpender)
 - [Phidauex](https://github.com/phidauex)
+
