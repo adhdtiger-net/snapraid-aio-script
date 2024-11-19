@@ -1164,7 +1164,7 @@ search_conf_files() {
 # Run SnapRAID status to check for the previous sync
 check_snapraid_status() {
   # Run snapraid status command and capture the output
-  local snapraid_status_output=$($SNAPRAID_BIN status)
+  local snapraid_status_output=$($SNAPRAID_BIN status -c "$SNAPRAID_CONF")
 
   # Check for the "No sync is in progress" message
   if echo "$snapraid_status_output" | grep -q "No sync is in progress"; then
