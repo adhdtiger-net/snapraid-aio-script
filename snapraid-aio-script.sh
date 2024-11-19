@@ -8,7 +8,7 @@
 ######################
 #  SCRIPT VARIABLES  #
 ######################
-SNAPSCRIPTVERSION="3.4" #DEV3
+SNAPSCRIPTVERSION="3.4" #DEV5
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -95,6 +95,11 @@ function main(){
       -d '{"content": "SnapRAID Script Job started"}' \
       "$DISCORD_WEBHOOK_URL"
     fi
+    if [ "$APPRISE" -eq 1 ]; then
+	  echo "Apprise service notification is enabled."
+	  check_and_install apprise
+	  "$APPRISE_BIN" -b "SnapRAID Script Job started" "$APPRISE_URL"
+	fi  
   fi
 
   ### Check if SnapRAID is found
@@ -888,6 +893,11 @@ function notify_success(){
     -d '{"content": "'"$DISCORD_SUBJECT"'"}' \
     "$DISCORD_WEBHOOK_URL"
   fi
+  
+  if [ "$APPRISE" -eq 1 ]; then
+	echo "Sending notification using Apprise service(s)."
+	"$APPRISE_BIN" -t "SnapRAID on $(hostname)" -b "$NOTIFY_OUTPUT" "$APPRISE_URL"
+  fi
   mklog "INFO: "$SUBJECT""
   }
 
@@ -908,6 +918,16 @@ function notify_warning(){
     -d '{"content": "'"$DISCORD_SUBJECT"'"}' \
     "$DISCORD_WEBHOOK_URL"
   fi
+  
+  if [ "$APPRISE" -eq 1 ]; then
+	echo "Sending notification using Apprise service(s)."
+	if [ "$APPRISE_ATTACH" -eq 1 ]; then
+	"$APPRISE_BIN" -t "SnapRAID on $(hostname)" -b "$NOTIFY_OUTPUT" -a "$TMP_OUTPUT" "$APPRISE_URL"
+	else
+	"$APPRISE_BIN" -t "SnapRAID on $(hostname)" -b "$NOTIFY_OUTPUT" "$APPRISE_URL"
+	fi
+  fi
+  
   if [ "$EMAIL_ADDRESS" ]; then
     trim_log < "$TMP_OUTPUT" | send_mail
   fi
