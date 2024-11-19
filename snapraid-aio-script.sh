@@ -8,7 +8,7 @@
 ######################
 #  SCRIPT VARIABLES  #
 ######################
-SNAPSCRIPTVERSION="3.4" #DEV5
+SNAPSCRIPTVERSION="3.4" #DEV6
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -16,15 +16,23 @@ SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
 # find the current path
 CURRENT_DIR=$(dirname "${0}")
 # import the config file for this script which contain user configuration
-CONFIG_FILE=${1:-$CURRENT_DIR/script-config.sh}
-#shellcheck source=script-config.sh
+CONFIG_FILE=${1:-$CURRENT_DIR/script-config.conf}
+#shellcheck source=script-config.conf
 source "$CONFIG_FILE"
 
-# Check if script configuration file has been found, if not send a message
-# to syslog and exit
+SYNC_MARKER="SYNC -"
+SCRUB_MARKER="SCRUB -"
+
+####################
+#   MAIN SCRIPT    #
+####################
+
+function main(){
+  # Check if script configuration file has been found, if not send a message
+  # to syslog and exit
   if [ ! -f "$CONFIG_FILE" ]; then
     echo "Script configuration file not found! The script cannot be run! Please check and try again!"
-    mklog_noconfig "WARN: Script configuration file not found! The script cannot be run! Please check and try again!"
+	  mklog_noconfig "WARN: Script configuration file not found! The script cannot be run! Please check and try again!"
     exit 1;
   # check if the config file has the correct version
   elif [ "$CONFIG_VERSION" != "$SNAPSCRIPTVERSION" ]; then
@@ -36,21 +44,12 @@ source "$CONFIG_FILE"
     exit 1;
   fi
 
-SYNC_MARKER="SYNC -"
-SCRUB_MARKER="SCRUB -"
-
-
-####################
-#   MAIN SCRIPT    #
-####################
-
-function main(){
   # create tmp file for output
   true > "$TMP_OUTPUT"
 
   # Redirect all output to file and screen. Starts a tee process
   output_to_file_screen
-
+  
   # timestamp the job
   echo "SnapRAID Script Job started [$(date)]"
   echo "Running SnapRAID version $SNAPRAIDVERSION"
@@ -786,11 +785,14 @@ function clean_desc(){
   [[ $- == *i* ]] && exec &>/dev/tty
  }
 
-function final_cleanup(){
-  resume_services
+function final_cleanup() {
+  if [ "${MANAGE_SERVICES:-0}" -eq 1 ]; then
+    resume_services
+  fi
   clean_desc
   exit
 }
+
 
 function prepare_output() {
 # severe warning first
