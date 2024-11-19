@@ -25,9 +25,32 @@ CHECK_UPDATES=1
 # When enabled, enter your Healthchecks UUID (not the full URL).
 # If using a self-hosted instance, change the URL to your endpoint
 # including the trailing slash.
+# HINT: If you selfhost Healthcheks.io, you can directly integrate it 
+# with Apprise using its GUI
 HEALTHCHECKS=0
 HEALTHCHECKS_ID="your-uuid-here"
 HEALTHCHECKS_URL="https://hc-ping.com/"
+
+# Apprise can send a notification to almost all of the most popular 
+# notification services available to us today such as: 
+# Telegram, Discord, Slack, Amazon SNS, Gotify, etc.
+# It can be used as an evolution of Hook Notification, which will be
+# dismissed in the future, eventually.
+# Set APPRISE to 1 to enable, 0 to disable.
+# Set APPRISE_URL according to the service you want to invoke.
+# Set APPRISE_ATTACH to get the report attached to the notification if a 
+# warning is issued. Not all services support this option.
+# Change APPRISE_BIN only if needed.
+# Apprise documentation and URL examples can be found here: 
+# https://github.com/caronc/apprise
+# You can use multiple Apprise URLS separated by spaces.
+# Example with Discord and Telegram:
+# APPRISE_URL="discord://<your-webook-url> tgram://<your-bot-token-here>/<your-chat-id-here>"
+APPRISE=0
+APPRISE_URL=""
+APPRISE_ATTACH=0
+
+APPRISE_BIN="$(command -v apprise)"
 
 # Use Telegram to report script execution summary (not the whole report)
 # Set 1 to enable. Create a bot using @botfather, then copy the API token.
