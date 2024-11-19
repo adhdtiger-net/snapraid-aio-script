@@ -157,6 +157,8 @@ fi
   fi
   fi
 
+  # Extract SnapRAID info (content and parity files) from the config file
+  extract_snapraid_info
 
   # sanity check first to make sure we can access the content and parity files
   mklog "INFO: Checking SnapRAID disks"
@@ -1110,7 +1112,6 @@ result=$?
 if [ $result -eq 0 ]; then
     # Only one SnapRAID config file found, proceeding
     echo "Proceeding with the omv-snapraid-.conf file: $SNAPRAID_CONF"
-
 elif [ $result -eq 2 ]; then
     # Multiple SnapRAID config files found, stopping the script
     echo "Stopping the script due to multiple SnapRAID configuration files. Please choose one config file and update your settings in the script-config file at ""$CONFIG_FILE"". Available SnapRAID config files:"
@@ -1161,6 +1162,25 @@ search_conf_files() {
   else
         return 2
     fi
+}
+
+# Extract SnapRAID info (content and parity files) from the config file
+
+extract_snapraid_info() {
+# Extract info from SnapRAID config
+SNAPRAID_CONF_LINES=$(grep -E '^[^#;]' $SNAPRAID_CONF)
+
+IFS=$'\n'
+# Build an array of content files
+CONTENT_FILES=(
+  $(echo "$SNAPRAID_CONF_LINES" | grep snapraid.content | cut -d ' ' -f2)
+)
+
+# Build an array of parity all files...
+PARITY_FILES=(
+  $(echo "$SNAPRAID_CONF_LINES" | grep -E '^([2-6z]-)*parity' | cut -d ' ' -f2- | tr ',' '\n')
+)
+unset IFS
 }
 
 # Run SnapRAID status to check for the previous sync
