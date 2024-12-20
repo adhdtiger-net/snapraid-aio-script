@@ -289,6 +289,8 @@ If you are running a Debian based distro (with `apt` package manager) the script
 - [`jq`](https://packages.debian.org/bullseye/jq) - used to send discord notifications, is a lightweight and flexible command-line JSON processor
 - [`bc`](https://packages.debian.org/bullseye/bc) - used for for floating-point comparisons
 - [`Apprise`](https://github.com/caronc/apprise) - used to send notifications to 100+ services
+   - To install Apprise, the script will use [`pipx`](https://github.com/pypa/pipx). The whole process is managed by the script
+   - When Apprise is installed the first time, the script will exit and you'll have to restart it manually. This is needed because of pipx instalation, othwerise Apprise would not be found.
 
 
 Dependencies that require manual installation:
