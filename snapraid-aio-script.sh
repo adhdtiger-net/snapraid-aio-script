@@ -8,7 +8,7 @@
 ######################
 #  SCRIPT VARIABLES  #
 ######################
-SNAPSCRIPTVERSION="3.4" #DEV6
+SNAPSCRIPTVERSION="3.4" #DEV7
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -96,8 +96,10 @@ function main(){
     fi
     if [ "$APPRISE" -eq 1 ]; then
 	  echo "Apprise service notification is enabled."
-	  check_and_install apprise
-	  "$APPRISE_BIN" -b "SnapRAID Script Job started" "$APPRISE_URL"
+	  check_and_install_apprise
+	  for APPRISE_URL_U in "${APPRISE_URL[@]}"; do
+	  "$APPRISE_BIN" -b "SnapRAID Script Job started" "$APPRISE_URL_U"
+	  done
 	fi  
   fi
 
@@ -899,8 +901,10 @@ function notify_success(){
   fi
   
   if [ "$APPRISE" -eq 1 ]; then
-	echo "Sending notification using Apprise service(s)."
-	"$APPRISE_BIN" -t "SnapRAID on $(hostname)" -b "$NOTIFY_OUTPUT" "$APPRISE_URL"
+    echo "Sending notification using Apprise service(s)."
+	  for APPRISE_URL_U in "${APPRISE_URL[@]}"; do
+	  "$APPRISE_BIN" -t "SnapRAID on $(hostname)" -b "$NOTIFY_OUTPUT" "$APPRISE_URL_U"
+      done
   fi
   mklog "INFO: "$SUBJECT""
   }
@@ -925,11 +929,13 @@ function notify_warning(){
   
   if [ "$APPRISE" -eq 1 ]; then
 	echo "Sending notification using Apprise service(s)."
+	for APPRISE_URL_U in "${APPRISE_URL[@]}"; do
 	if [ "$APPRISE_ATTACH" -eq 1 ]; then
-	"$APPRISE_BIN" -t "SnapRAID on $(hostname)" -b "$NOTIFY_OUTPUT" -a "$TMP_OUTPUT" "$APPRISE_URL"
+	"$APPRISE_BIN" -t "SnapRAID on $(hostname)" -b "$NOTIFY_OUTPUT" -a "$TMP_OUTPUT" "$APPRISE_URL_U"
 	else
-	"$APPRISE_BIN" -t "SnapRAID on $(hostname)" -b "$NOTIFY_OUTPUT" "$APPRISE_URL"
+	"$APPRISE_BIN" -t "SnapRAID on $(hostname)" -b "$NOTIFY_OUTPUT" "$APPRISE_URL_U"
 	fi
+	done
   fi
   
   if [ "$EMAIL_ADDRESS" ]; then
@@ -957,12 +963,26 @@ function show_snapraid_info() {
    -d text="$INFO_MESSAGE" \
    -d parse_mode="markdown"
   fi
+  
   if [ "$DISCORD" -eq 1 ]; then
   INFO_MESSAGE_ESCAPED=$(echo "$INFO_MESSAGE_DISCORD" | jq -Rs | cut -c 2- | rev | cut -c 2- | rev)
    curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
    -H 'Content-Type: application/json' \
    -d "{\"content\": \"\`\`\`\\n${INFO_MESSAGE_ESCAPED}\\n\`\`\`\"}" \
    "$DISCORD_WEBHOOK_URL"
+  fi
+  
+  if [ "$APPRISE" -eq 1 ]; then
+    for APPRISE_URL_U in "${APPRISE_URL[@]}"; do
+        if [[ "$APPRISE_URL_U" == *"discord://"* ]]; then
+            # For Discord, use the URL without format (markdown) parameter
+            "$APPRISE_BIN" -v -b "$INFO_MESSAGE" "$APPRISE_URL_U"
+        else
+            # For all other services, use markdown formatting
+            APPRISE_URL_FORMAT="${APPRISE_URL_U}?format=markdown"
+            "$APPRISE_BIN" -v -b "$INFO_MESSAGE" "$APPRISE_URL_FORMAT"
+        fi
+    done
   fi
 }
 
@@ -1085,6 +1105,48 @@ check_and_install() {
     sudo apt-get install -y $PACKAGE_NAME > /dev/null 2>&1
     echo "$PACKAGE_NAME installed successfully."
   fi
+}
+
+check_and_install_apprise() {
+    # Function to check if a command exists
+    command_exists() {
+        command -v "$1" >/dev/null 2>&1
+    }
+
+    # Check if apt-get exists
+    if ! command_exists apt-get; then
+        echo "Error: This script requires apt-get package manager. Cannot proceed."
+        return 1
+    fi
+
+    # Check if pipx is installed
+    if ! command_exists pipx; then
+        echo "pipx is not installed. Installing pipx..."
+        if ! sudo apt-get update && sudo apt-get install -y python3-pipx; then
+            echo "Error: Failed to install pipx. Cannot proceed."
+            return 1
+        fi
+        # Ensure pipx is properly set up
+        pipx ensurepath
+    fi
+
+    # Check if apprise is installed via pipx
+    if ! pipx list | grep -i "apprise" >/dev/null; then
+        echo "apprise is not installed. Installing apprise using pipx..."
+        if ! pipx install apprise; then
+            echo "Error: Failed to install apprise."
+            return 1
+        fi
+        
+        echo -e "\nApprise has been successfully installed!"
+        echo -e "\n⚠️  Important: You need to restart your shell session to use apprise."
+        echo "Please exit and restart your terminal, then run your script again."
+		notify_warning
+        exit 0
+    else
+        echo "apprise is already installed via pipx."
+        return 0
+    fi
 }
 
 # Check OMV Version
