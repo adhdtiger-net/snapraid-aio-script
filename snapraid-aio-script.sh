@@ -8,7 +8,7 @@
 ######################
 #  SCRIPT VARIABLES  #
 ######################
-SNAPSCRIPTVERSION="3.4" #DEV7
+SNAPSCRIPTVERSION="3.4" #DEV8
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -1240,7 +1240,7 @@ CONTENT_FILES=(
 
 # Build an array of parity all files...
 PARITY_FILES=(
-  $(echo "$SNAPRAID_CONF_LINES" | grep -E '^([2-6z]-)*parity' | cut -d ' ' -f2- | tr ',' '\n')
+  $(echo "$SNAPRAID_CONF_LINES" | grep -E '^([1-6z]-)*parity' | cut -d ' ' -f2- | tr ',' '\n')
 )
 unset IFS
 }
