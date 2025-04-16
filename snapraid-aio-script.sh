@@ -1229,20 +1229,27 @@ search_conf_files() {
 # Extract SnapRAID info (content and parity files) from the config file
 
 extract_snapraid_info() {
-# Extract info from SnapRAID config
-SNAPRAID_CONF_LINES=$(grep -E '^[^#;]' $SNAPRAID_CONF)
+  # Extract info from SnapRAID config
+  SNAPRAID_CONF_LINES=$(grep -E '^[^#;]' "$SNAPRAID_CONF")
 
-IFS=$'\n'
-# Build an array of content files
-CONTENT_FILES=(
-  $(echo "$SNAPRAID_CONF_LINES" | grep snapraid.content | cut -d ' ' -f2)
-)
+  IFS=$'\n'
+  # Build an array of content files
+  CONTENT_FILES=(
+    $(echo "$SNAPRAID_CONF_LINES" \
+      | grep snapraid.content \
+      | cut -d ' ' -f2 \
+      | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+  )
 
-# Build an array of parity all files...
-PARITY_FILES=(
-  $(echo "$SNAPRAID_CONF_LINES" | grep -E '^([1-6z]-)*parity' | cut -d ' ' -f2- | tr ',' '\n')
-)
-unset IFS
+  # Build an array of parity files
+  PARITY_FILES=(
+    $(echo "$SNAPRAID_CONF_LINES" \
+      | grep -E '^([1-6z]-)*parity' \
+      | cut -d ' ' -f2- \
+      | tr ',' '\n' \
+      | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+  )
+  unset IFS
 }
 
 # Run SnapRAID status to check for the previous sync
