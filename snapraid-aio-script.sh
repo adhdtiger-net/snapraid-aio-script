@@ -1285,6 +1285,9 @@ check_root() {
     SUBJECT="[WARNING] - Script not run as root. Exiting." $EMAIL_SUBJECT_PREFIX"
     NOTIFY_OUTPUT="$SUBJECT"
     notify_warning
+    if [ "$EMAIL_ADDRESS" ]; then
+      trim_log < "$TMP_OUTPUT" | send_mail
+    fi
     exit 1
   fi
 }
