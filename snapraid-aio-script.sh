@@ -49,6 +49,9 @@ function main(){
 
   # Redirect all output to file and screen. Starts a tee process
   output_to_file_screen
+
+  # Check if the script is running as root
+  check_root
   
   # timestamp the job
   echo "SnapRAID Script Job started [$(date)]"
@@ -1273,6 +1276,19 @@ check_snapraid_status() {
     SNAPRAID_STATUS=2
   fi
 }
+
+# Function to check if the script is running as root
+check_root() {
+  if [ "$(id -u)" -ne 0 ]; then
+    echo "This script must be run as root. Exiting."
+    mklog "ERROR: Script not run as root. Exiting."
+    SUBJECT="[WARNING] - Script not run as root. Exiting." $EMAIL_SUBJECT_PREFIX"
+    NOTIFY_OUTPUT="$SUBJECT"
+    notify_warning
+    exit 1
+  fi
+}
+
 
 # Set TRAP
 trap final_cleanup INT EXIT
