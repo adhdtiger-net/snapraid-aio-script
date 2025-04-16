@@ -159,6 +159,7 @@ fi
     FORMATTED_CONF="\`$SNAPRAID_CONF\`"
   NOTIFY_OUTPUT="$SUBJECT The script cannot be run! Please check your settings, because the specified file $FORMATTED_CONF does not exist."
     notify_warning
+    exit 1;
   fi
   fi
 
