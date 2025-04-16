@@ -8,7 +8,7 @@
 ######################
 #  SCRIPT VARIABLES  #
 ######################
-SNAPSCRIPTVERSION="3.4" #DEV8
+SNAPSCRIPTVERSION="3.4" #DEV9
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -1099,14 +1099,35 @@ function mklog_noconfig() {
 
 # Function to check and install packages if not found
 check_and_install() {
-  PACKAGE_NAME=$1
-  if [ $(dpkg --version 2>/dev/null | grep -c "Debian") -eq 0 ]; then
-    if [ -z $dpkg_notification ]; then echo "dpkg not found, cannot check for dependencies. Please ensure they are installed, otherwise the script will not work."; fi
-    dpkg_notification=1
-  elif [ "$(dpkg-query -W -f='${Status}' $PACKAGE_NAME 2>/dev/null | grep -c "ok installed")" -eq 0 ]; then
-    echo "$PACKAGE_NAME has not been found and will be installed..."
-    sudo apt-get install -y $PACKAGE_NAME > /dev/null 2>&1
+  PACKAGE_NAME="$1"
+
+  # If dpkg is missing, skip the check but warn the user
+  if ! command -v dpkg >/dev/null 2>&1; then
+    echo "WARNING: dpkg not found. Cannot check or install $PACKAGE_NAME. Please ensure it's installed manually."
+    mklog "WARN: dpkg not found. Skipping check/install for $PACKAGE_NAME."
+    return
+  fi
+
+  # Check if package is already installed
+  if ! dpkg-query -W -f='${Status}' "$PACKAGE_NAME" 2>/dev/null | grep -q "ok installed"; then
+    echo "$PACKAGE_NAME not found. Attempting to install..."
+    mklog "INFO: Attempting to install missing package: $PACKAGE_NAME"
+
+    if ! sudo apt-get install -y "$PACKAGE_NAME" > /dev/null 2>&1; then
+      echo "ERROR: Failed to install $PACKAGE_NAME"
+      mklog "ERROR: apt-get failed to install $PACKAGE_NAME"
+      return 1
+    fi
+
+    # Verify again after install
+    if ! dpkg-query -W -f='${Status}' "$PACKAGE_NAME" 2>/dev/null | grep -q "ok installed"; then
+      echo "ERROR: $PACKAGE_NAME still not installed after attempting installation."
+      mklog "ERROR: $PACKAGE_NAME still missing after install attempt."
+      return 1
+    fi
+
     echo "$PACKAGE_NAME installed successfully."
+    mklog "INFO: $PACKAGE_NAME installed successfully."
   fi
 }
 
@@ -1230,7 +1251,6 @@ search_conf_files() {
 }
 
 # Extract SnapRAID info (content and parity files) from the config file
-
 extract_snapraid_info() {
   # Extract info from SnapRAID config
   SNAPRAID_CONF_LINES=$(grep -E '^[^#;]' "$SNAPRAID_CONF")
@@ -1282,16 +1302,12 @@ check_root() {
   if [ "$(id -u)" -ne 0 ]; then
     echo "This script must be run as root. Exiting."
     mklog "ERROR: Script not run as root. Exiting."
-    SUBJECT="[WARNING] - Script not run as root. Exiting." $EMAIL_SUBJECT_PREFIX"
+    SUBJECT="[WARNING] - Script not run as root. Exiting. $EMAIL_SUBJECT_PREFIX"
     NOTIFY_OUTPUT="$SUBJECT"
     notify_warning
-    if [ "$EMAIL_ADDRESS" ]; then
-      trim_log < "$TMP_OUTPUT" | send_mail
-    fi
     exit 1
   fi
 }
-
 
 # Set TRAP
 trap final_cleanup INT EXIT
