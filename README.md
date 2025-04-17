@@ -103,11 +103,13 @@ If you don't know what to do, I recommend using the default values and see how i
 	- If you don't read your emails every day, this is a great one for you, since you can be quickly informed if things go wrong. 
   	- The script will report when it's started and when it's completed. If there's a failure, it's notified as well.
   	- You can choose to get the output attached if there's a warning (only supported by some services, check Apprise docs)
+- Email report via [Apprise](https://github.com/caronc/apprise)
+  	- If your distro doesn't have `mailx` or `sendmail`, you can use Apprise to deliver your email reports
 - Notification Hook **[deprecated, use Apprise]**
 	- Made for external services or mail binaries with different commands than `mailx`.
 	- Configure the path of the script or the mail binary to be invoked.
 	- You can still use native services since it only replaces the standard email.
- 	- You can choose to run the final hook before or after the spindown command, if configured. 
+ 	- You can choose to run the final hook before or after the spindown command, if configured.
 - Update Check - enabled by default
   	- The script will check via GitHub if there's an update and alert the user via the configured notification systems
   	- If you don't like this, it can be disabled
@@ -124,7 +126,7 @@ If you don't know what to do, I recommend using the default values and see how i
 - Spindown - spindown disks after the script has completed operations. Uses a rewritten version of [hd-idle](https://github.com/adelolmo/hd-idle).
 
  
-You can also change more advanced options such SnapRAID binary location, log file location and mail binary. If your mail binary uses different commands than `mailx`, use the Notification Hook feature.
+You can also change more advanced options such SnapRAID binary location, log file location and mail binary.
 
 ## A nice email report
 This script produces emails that don't contain a list of changed files to improve clarity.
@@ -298,7 +300,6 @@ Dependencies that require manual installation:
 
 # Installation
 
-
 1. Install the packages listed in the Requirements section if you're not running a distro with `apt` package manager
 2. Download the latest version from [Releases](https://github.com/auanasgheps/snapraid-aio-script/releases) 
 3. Extract the archive wherever you prefer 
@@ -318,8 +319,7 @@ It is tested on OMV6 and OMV7, but will work on other distros. In such case you 
 
 ### OMV7 USERS
 OMV7's SnapRAID plugins introduced support for multiple arrays. This means each SnapRAID config file does not have a predictable name, unlike what occurred with OMV6 or standard SnapRAID installs. 
-If running on OMV7, the AIO Script will search for a SnapRAID configuration file in the new path `/etc/snapraid/`. If multiple arrays are found, it will inform you to adjust your configuration.
-
+When running on OMV7, the AIO Script will search for a single SnapRAID configuration file in the new path `/etc/snapraid/`. If multiple arrays are found, it will inform you to adjust your configuration.
 
 ## First Run
 If you start with empty disks, you cannot use (yet) this script, since it expects SnapRAID files which would not be found.
