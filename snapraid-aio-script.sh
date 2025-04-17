@@ -8,7 +8,7 @@
 ######################
 #  SCRIPT VARIABLES  #
 ######################
-SNAPSCRIPTVERSION="3.4" #DEV10
+SNAPSCRIPTVERSION="3.4" #DEV11
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -399,7 +399,7 @@ fi
   echo "## Total time elapsed for SnapRAID: $ELAPSED"
   mklog "INFO: Total time elapsed for SnapRAID: $ELAPSED"
   # if email or hook service are enabled, will be sent now
-  if [ "$EMAIL_ADDRESS" ] || [ -x "$HOOK_NOTIFICATION" ] || [ "$HEALTHCHECKS" -eq 1 ] || [ "$TELEGRAM" -eq 1 ] || [ "$DISCORD" -eq 1 ]; then
+  if [ "$EMAIL_ADDRESS" ] || [ -x "$HOOK_NOTIFICATION" ] || [ "$APPRISE_EMAIL" -eq 1 ] || [ "$HEALTHCHECKS" -eq 1 ] || [ "$TELEGRAM" -eq 1 ] || [ "$DISCORD" -eq 1 ]; then
     # Add a topline to email body and send a long mail
   sed_me "1s:^:##$SUBJECT \n:" "${TMP_OUTPUT}"
     # send long mail if verbosity is set to 1
@@ -1024,6 +1024,9 @@ function send_mail(){
 if [ -x "$HOOK_NOTIFICATION" ]; then
   echo -e "Notification user script is set. Calling it now [$(date)]"
   $HOOK_NOTIFICATION "$SUBJECT" "$body"
+elif [ "$APPRISE_EMAIL" -eq 1 ]; then
+  echo "Sending email report using Apprise service."
+  "$APPRISE_BIN" -vv -i "html" -t "$SUBJECT" -b "$body" \ "$APPRISE_EMAIL_URL"
 elif [ "$EMAIL_ADDRESS" ]; then
   echo -e "Email address is set. Sending email report to **$EMAIL_ADDRESS** [$(date)]"
   if [ -z "$MAIL_BIN" ]; then
@@ -1050,8 +1053,8 @@ elif [ "$EMAIL_ADDRESS" ]; then
         $MAIL_BIN -a 'Content-Type: text/html; charset=UTF-8' -s "$SUBJECT" -r "$FROM_EMAIL_ADDRESS" "$EMAIL_ADDRESS" \
           < <(echo "$body")
       fi
-    fi
-  fi
+     fi
+   fi
 fi
 
 }
