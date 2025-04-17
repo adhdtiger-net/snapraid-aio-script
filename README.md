@@ -357,7 +357,7 @@ If you are using a previous version of the script, do not use your config file. 
 
 # Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=auanasgheps/snapraid-aio-script&type=Date)](https://star-history.com/#auanasgheps/snapraid-aio-script&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=auanasgheps/snapraid-aio-script&type=Date)](https://www.star-history.com/#auanasgheps/snapraid-aio-script&Date)
 
 # Credits
 All rights belong to the respective creators. 
