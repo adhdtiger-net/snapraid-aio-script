@@ -8,7 +8,7 @@
 ######################
 #  SCRIPT VARIABLES  #
 ######################
-SNAPSCRIPTVERSION="3.4" #DEV9
+SNAPSCRIPTVERSION="3.4" #DEV10
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -40,7 +40,7 @@ function main(){
     mklog "WARN: Please update your config file to the latest version. The current file is not compatible with this script!"
     SUBJECT="[WARNING] - Configuration Error $EMAIL_SUBJECT_PREFIX"
     NOTIFY_OUTPUT="$SUBJECT"
-    notify_warning
+    notify_warning "fatal"
     exit 1;
   fi
 
@@ -112,7 +112,7 @@ function main(){
     mklog "WARN: SnapRAID binary not found in PATH. Please check if SnapRAID is installed correctly and found in the PATH environment values of your system."
     SUBJECT="[WARNING] - SnapRAID binary not found in PATH $EMAIL_SUBJECT_PREFIX"
     NOTIFY_OUTPUT="$SUBJECT"
-    notify_warning
+    notify_warning "fatal"
     exit 1
 fi
 
@@ -122,7 +122,7 @@ fi
       mklog "WARN: The script has detected SnapRAID is already running. Please check the status of the previous SnapRAID job before running this script again."
       SUBJECT="[WARNING] - SnapRAID already running $EMAIL_SUBJECT_PREFIX"
       NOTIFY_OUTPUT="$SUBJECT"
-      notify_warning
+      notify_warning "fatal"
       exit 1;
   else
       echo "SnapRAID is not running, proceeding."
@@ -158,7 +158,7 @@ fi
   SUBJECT="[WARNING] - SnapRAID configuration file not found!"
     FORMATTED_CONF="\`$SNAPRAID_CONF\`"
   NOTIFY_OUTPUT="$SUBJECT The script cannot be run! Please check your settings, because the specified file $FORMATTED_CONF does not exist."
-    notify_warning
+    notify_warning "fatal"
     exit 1;
   fi
   fi
@@ -180,10 +180,7 @@ fi
     echo "Stopping the script because the previous SnapRAID sync did not complete correctly."
     SUBJECT="[WARNING] - Previous SnapRAID sync did not complete correctly."
     NOTIFY_OUTPUT="$SUBJECT"
-    notify_warning
-      if [ "$EMAIL_ADDRESS" ]; then
-        trim_log < "$TMP_OUTPUT" | send_mail
-      fi
+    notify_warning "fatal"
     exit 1;
 	
   elif [ $SNAPRAID_STATUS -eq 2 ]; then
@@ -191,10 +188,7 @@ fi
     echo "Stopping the script due to unknown SnapRAID status. Please run 'snapraid status' on your host for more information."
       SUBJECT="[WARNING] - SnapRAID unknown status"
       NOTIFY_OUTPUT="$SUBJECT"
-      notify_warning
-      if [ "$EMAIL_ADDRESS" ]; then
-       trim_log < "$TMP_OUTPUT" | send_mail
-      fi
+      notify_warning "fatal"
     exit 1;
   fi  
 
@@ -245,7 +239,7 @@ fi
     echo "Exiting script. [$(date)]"
     SUBJECT="[WARNING] - Unable to continue with SYNC/SCRUB job(s). Check DIFF job output. $EMAIL_SUBJECT_PREFIX"
     NOTIFY_OUTPUT="$SUBJECT"
-    notify_warning
+    notify_warning "fatal"
     exit 1;
   fi
   if [ $IGNORE_PATTERN ]; then
@@ -414,7 +408,7 @@ fi
     else
     # or send a short mail
       trim_log < "$TMP_OUTPUT" | send_mail
-    fi
+	fi
   fi
 
   # Save and rotate logs if enabled
@@ -445,7 +439,7 @@ function sanity_check() {
     # Add a topline to email body
     SUBJECT="[WARNING] - Parity file ($i) not found! $EMAIL_SUBJECT_PREFIX"
     NOTIFY_OUTPUT="$SUBJECT"
-    notify_warning
+    notify_warning "fatal"
     exit 1;
   fi
   done
@@ -463,7 +457,7 @@ function sanity_check() {
       # Add a topline to email body
       SUBJECT="[WARNING] - Content file ($i) not found! $EMAIL_SUBJECT_PREFIX"
       NOTIFY_OUTPUT="$SUBJECT"
-      notify_warning
+      notify_warning "fatal"
     exit 1;
     fi
   done
@@ -914,39 +908,45 @@ function notify_success(){
   }
 
 function notify_warning(){
+  local MODE="${1:-nonfatal}"  # default to nonfatal if not specified
+
   if [ "$HEALTHCHECKS" -eq 1 ]; then
     curl -fsS -m 5 --retry 3 -o /dev/null "$HEALTHCHECKS_URL$HEALTHCHECKS_ID"/fail --data-raw "$NOTIFY_OUTPUT"
   fi
+
   if [ "$TELEGRAM" -eq 1 ]; then
     curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
     -H 'Content-Type: application/json' \
     -d '{"chat_id": "'"$TELEGRAM_CHAT_ID"'", "text": "'"$NOTIFY_OUTPUT"'"}' \
     https://api.telegram.org/bot"$TELEGRAM_TOKEN"/sendMessage
   fi
+
   if [ "$DISCORD" -eq 1 ]; then
-  DISCORD_SUBJECT=$(echo "$NOTIFY_OUTPUT" | jq -Rs | cut -c 2- | rev | cut -c 2- | rev)
+    DISCORD_SUBJECT=$(echo "$NOTIFY_OUTPUT" | jq -Rs | cut -c 2- | rev | cut -c 2- | rev)
     curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
     -H 'Content-Type: application/json' \
     -d '{"content": "'"$DISCORD_SUBJECT"'"}' \
     "$DISCORD_WEBHOOK_URL"
   fi
-  
+
   if [ "$APPRISE" -eq 1 ]; then
-	echo "Sending notification using Apprise service(s)."
-	for APPRISE_URL_U in "${APPRISE_URL[@]}"; do
-	if [ "$APPRISE_ATTACH" -eq 1 ]; then
-	"$APPRISE_BIN" -t "SnapRAID on $(hostname)" -b "$NOTIFY_OUTPUT" -a "$TMP_OUTPUT" "$APPRISE_URL_U"
-	else
-	"$APPRISE_BIN" -t "SnapRAID on $(hostname)" -b "$NOTIFY_OUTPUT" "$APPRISE_URL_U"
-	fi
-	done
+    echo "Sending notification using Apprise service(s)."
+    for APPRISE_URL_U in "${APPRISE_URL[@]}"; do
+      if [ "$APPRISE_ATTACH" -eq 1 ]; then
+        "$APPRISE_BIN" -t "SnapRAID on $(hostname)" -b "$NOTIFY_OUTPUT" -a "$TMP_OUTPUT" "$APPRISE_URL_U"
+      else
+        "$APPRISE_BIN" -t "SnapRAID on $(hostname)" -b "$NOTIFY_OUTPUT" "$APPRISE_URL_U"
+      fi
+    done
   fi
-  
-  if [ "$EMAIL_ADDRESS" ]; then
+
+  if [ "$EMAIL_ADDRESS" ] && [ "$MODE" == "fatal" ]; then
     trim_log < "$TMP_OUTPUT" | send_mail
   fi
-  mklog "WARN: "$SUBJECT""
-  }
+
+  mklog "WARN: $SUBJECT"
+}
+
 
 function show_snapraid_info() {
   local command_output=$($1)
@@ -1209,7 +1209,7 @@ elif [ $result -eq 2 ]; then
   SUBJECT="[WARNING] - Multiple SnapRAID configuration files!"
     FORMATTED_CONF="\`$SNAPRAID_CONF\`"
   NOTIFY_OUTPUT="$SUBJECT Stopping the script due to multiple SnapRAID configuration files. Please choose one config file and update your settings in the script-config file at ""$CONFIG_FILE""."
-    notify_warning
+    notify_warning "fatal"
   exit 1;
 
 else
@@ -1219,7 +1219,7 @@ else
   SUBJECT="[WARNING] - SnapRAID configuration file not found!"
     FORMATTED_CONF="\`$SNAPRAID_CONF\`"
   NOTIFY_OUTPUT="$SUBJECT The script cannot be run! Please check your settings, because the specified file $FORMATTED_CONF does not exist."
-    notify_warning
+    notify_warning "fatal"
   exit 1;
 fi
 }
@@ -1305,7 +1305,7 @@ check_root() {
     mklog "ERROR: Script not run as root. Exiting."
     SUBJECT="[WARNING] - Script not run as root. Exiting. $EMAIL_SUBJECT_PREFIX"
     NOTIFY_OUTPUT="$SUBJECT"
-    notify_warning
+    notify_warning "fatal"
     exit 1
   fi
 }
