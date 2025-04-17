@@ -1,7 +1,7 @@
 # Snapraid AIO Script
 The definitive all-in-one [SnapRAID](https://github.com/amadvance/snapraid) script on Linux. I hope you'll agree :).
 
-There are many SnapRAID scripts out there, but none has the features I want. So I made my own, inspired by existing solutions.
+There are many SnapRAID scripts out there, but none had the features I wanted. So I made my own, inspired by existing solutions.
 
 It is meant to be run periodically (daily), do the heavy lifting and send an email you will actually read.
 
@@ -15,7 +15,7 @@ Contributions are welcome!
   * [How it works](#how-it-works)
     + [Additional Features](#additional-features)
   * [Customization](#customization)
-    + [Customizable features](#customizable-features)
+    + [Available options](#available-options)
   * [A nice email report](#a-nice-email-report)
 - [Requirements](#requirements)
 - [Installation](#installation)
@@ -59,9 +59,9 @@ Contributions are welcome!
 	- Can be used to track script execution time, status and promptly alert about errors.
 	- Supports [Healthchecks.io](https://healthchecks.io), and 100+ services via Apprise (Telegram, Discord, Slack, etc) 
     - You can also get notified with the `Snapraid SMART log` and `Snapraid Status`
-	- Notification Hook: if your favourite notification service is not supported by this script, you can use a custom notification command or another mail binary
+	- Notification Hook: if your favourite notification service is not supported by this script, you can use a custom notification command or another mail binary **[deprecated, use Apprise]**
 - Important messages are also sent to the system log.
-- Emails are still the best place to get detailed but readable information.
+- Emails reports are still the best way to get detailed but readable information.
 
 ## Customization
 Many options can be changed to your taste, their behavior is documented in the config file.
@@ -100,10 +100,10 @@ If you don't know what to do, I recommend using the default values and see how i
   	- If the script ends with a **_WARNING_** message, it will report **_DOWN_** to Healthchecks.io, if the message is **_COMPLETED_** it will report **_UP_**. 
 - Notifications services via [Apprise](https://github.com/caronc/apprise)
 	- Send notifications to Telegram, Discord, Slack... you name it! Apprise supports 100+ services! Configuration is simple, instructions [are here](https://github.com/caronc/apprise/wiki).
-	- 	If you don't read your emails every day, this is a great one for you, since you can be quickly informed if things go wrong. 
-  	- The script will report when is started and when is completed. If there's a failure it's included as well.
+	- If you don't read your emails every day, this is a great one for you, since you can be quickly informed if things go wrong. 
+  	- The script will report when it's started and when it's completed. If there's a failure, it's notified as well.
   	- You can choose to get the output attached if there's a warning (only supported by some services, check Apprise docs)
-- Notification Hook
+- Notification Hook **[deprecated, use Apprise]**
 	- Made for external services or mail binaries with different commands than `mailx`.
 	- Configure the path of the script or the mail binary to be invoked.
 	- You can still use native services since it only replaces the standard email.
