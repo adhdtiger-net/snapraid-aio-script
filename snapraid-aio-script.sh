@@ -414,7 +414,7 @@ fi
   # Save and rotate logs if enabled
   if [ "$RETENTION_DAYS" -gt 0 ]; then
     find "$SNAPRAID_LOG_DIR"/SnapRAID-* -mtime +"$RETENTION_DAYS" -delete  # delete old logs
-    cp $TMP_OUTPUT "$SNAPRAID_LOG_DIR"/SnapRAID-"$(date +"%Y_%m_%d-%H%M")".out
+    cp $TMP_OUTPUT "$SNAPRAID_LOG_DIR"/SnapRAID-"$(date +"%Y_%m_%d-%H%M")".txt
   fi
 
   # exit with success, letting the trap handle cleanup of file descriptors
