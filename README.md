@@ -59,6 +59,7 @@ Contributions are welcome!
 	- Can be used to track script execution time, status and promptly alert about errors.
 	- Supports [Healthchecks.io](https://healthchecks.io), and 100+ services via Apprise (Telegram, Discord, Slack, etc) 
     - You can also get notified with the `Snapraid SMART log` and `Snapraid Status`
+    - You can get the full email report if a warning is issued (breached threshold)
 	- Notification Hook: if your favourite notification service is not supported by this script, you can use a custom notification command or another mail binary **[deprecated, use Apprise]**
 - Important messages are also sent to the system log.
 - Emails reports are still the best way to get detailed but readable information.
@@ -105,6 +106,7 @@ If you don't know what to do, I recommend using the default values and see how i
   	- You can choose to get the output attached if there's a warning (only supported by some services, check Apprise docs)
 - Email report via [Apprise](https://github.com/caronc/apprise)
   	- If your distro doesn't have `mailx` or `sendmail`, you can use Apprise to deliver your email reports
+   - You can choose to get the output attached if there's a warning
 - Notification Hook **[deprecated, use Apprise]**
 	- Made for external services or mail binaries with different commands than `mailx`.
 	- Configure the path of the script or the mail binary to be invoked.
