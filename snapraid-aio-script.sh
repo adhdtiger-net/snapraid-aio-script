@@ -8,7 +8,7 @@
 ######################
 #  SCRIPT VARIABLES  #
 ######################
-SNAPSCRIPTVERSION="3.4" #DEV11
+SNAPSCRIPTVERSION="3.4" #DEV12
 
 # Read SnapRAID version
 SNAPRAIDVERSION="$(snapraid -V | sed -e 's/snapraid v\(.*\)by.*/\1/')"
@@ -904,6 +904,11 @@ function notify_success(){
 	  "$APPRISE_BIN" -t "SnapRAID on $(hostname)" -b "$NOTIFY_OUTPUT" "$APPRISE_URL_U"
       done
   fi
+  
+  if [ "$APPRISE_EMAIL" -eq 1 ]; then
+    APPRISE_EMAIL_ATTACH_DO=0
+  fi 	
+  
   mklog "INFO: "$SUBJECT""
   }
 
@@ -943,6 +948,10 @@ function notify_warning(){
   if [ "$EMAIL_ADDRESS" ] && [ "$MODE" == "fatal" ]; then
     trim_log < "$TMP_OUTPUT" | send_mail
   fi
+  
+  if [ "$APPRISE_EMAIL" -eq 1 ]; then
+    APPRISE_EMAIL_ATTACH_DO=1
+  fi 	
 
   mklog "WARN: $SUBJECT"
 }
@@ -1026,7 +1035,11 @@ if [ -x "$HOOK_NOTIFICATION" ]; then
   $HOOK_NOTIFICATION "$SUBJECT" "$body"
 elif [ "$APPRISE_EMAIL" -eq 1 ]; then
   echo "Sending email report using Apprise service."
-  "$APPRISE_BIN" -vv -i "html" -t "$SUBJECT" -b "$body" \ "$APPRISE_EMAIL_URL"
+  if [ "$APPRISE_EMAIL_ATTACH" -eq 1 ] && [ "$APPRISE_EMAIL_ATTACH_DO" -eq 1 ]; then
+    "$APPRISE_BIN" -vv -i "html" -t "$SUBJECT" -b "$body" -a "$TMP_OUTPUT" \ "$APPRISE_EMAIL_URL"
+    else
+    "$APPRISE_BIN" -vv -i "html" -t "$SUBJECT" -b "$body" \ "$APPRISE_EMAIL_URL"
+  fi
 elif [ "$EMAIL_ADDRESS" ]; then
   echo -e "Email address is set. Sending email report to **$EMAIL_ADDRESS** [$(date)]"
   if [ -z "$MAIL_BIN" ]; then
@@ -1038,7 +1051,6 @@ elif [ "$EMAIL_ADDRESS" ]; then
     else
       # Try to determine if the mailx version is the incompatible one
       MAILX_VERSION=$($MAIL_BIN -V 2>/dev/null || echo "unknown")
-
       if [[ "$MAILX_VERSION" == *"12.5 7/5/10"* ]]; then
         echo "Incompatible version of mailx found, using sendmail instead."
         (
