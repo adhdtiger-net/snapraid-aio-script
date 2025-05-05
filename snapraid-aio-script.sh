@@ -876,9 +876,10 @@ function notify_snapraid_info() {
       -d parse_mode="markdown"
   fi
   if [ "$DISCORD" -eq 1 ]; then
+    INFO_MESSAGE_ESCAPED=$(echo "$INFO_MESSAGE_DISCORD" | jq -Rs | cut -c 2- | rev | cut -c 2- | rev)
     curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
       -H 'Content-Type: application/json' \
-      -d '{"content": "'"$INFO_MESSAGE"'"}' \
+      -d '{"content": "'"${INFO_MESSAGE_ESCAPED}"'"}' \
       "$DISCORD_WEBHOOK_URL"
   fi
 }
