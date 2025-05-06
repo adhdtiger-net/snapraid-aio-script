@@ -879,7 +879,7 @@ function notify_snapraid_info() {
     INFO_MESSAGE_ESCAPED="$(echo "$INFO_MESSAGE_DISCORD" | jq -Rs | cut -c 2- | rev | cut -c 2- | rev)"
     curl -fsS -m 5 --retry 3 -o /dev/null -X POST \
       -H 'Content-Type: application/json' \
-      -d '{\"content\": \"\`\`\`\\n'"${INFO_MESSAGE_ESCAPED}"'\\n\`\`\`\"}' \
+      -d "{\"content\": \"\`\`\`\\n\"'${INFO_MESSAGE_ESCAPED}'\"\\n\`\`\`\"}" \
       "$DISCORD_WEBHOOK_URL"
   fi
 }
